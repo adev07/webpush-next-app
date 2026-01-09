@@ -1,0 +1,40 @@
+name: First Time Setup
+run-name: First Time Setup of Repo
+
+on:
+  # run when branch created (repo generated from template)
+  create:
+  push:
+    branches:
+      - main
+
+# only keep latest run of this workflow
+concurrency:
+  group: first-time-setup
+  cancel-in-progress: true
+
+jobs:
+  first-time-setup:
+    name: First Time Setup
+    # ensure run only once, when repo generated
+    if: github.run_number == 1
+
+    runs-on: ubuntu-latest
+
+    steps:
+      # get main branch repo contents
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # remove files not needed for user instance of template
+      - name: Remove Template Specific Files
+        run: rm -rf .github
+
+      # save changed files
+      - name: Update Branch
+        run: |
+          git config user.name "bcanfield"
+          git config user.email "brandincanfield@gmail.com"
+          git add .
+          git commit -m "Initial Repo Setup"
+          git push

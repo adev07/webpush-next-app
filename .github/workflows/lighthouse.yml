@@ -1,0 +1,30 @@
+name: Lighthouse
+
+on:
+  deployment_status:
+    branches:
+      - main
+permissions:
+  contents: write
+jobs:
+  lighthouse:
+    name: Lighthouse
+    if: github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 18.x
+      - name: Lighthouse
+        run: npx lighthouse-badges --url https://nextjs-pwa-webpush-template.vercel.app -o lighthouse_results
+      - name: Update Lighthouse Branch
+        run: |
+          git config user.name "bcanfield"
+          git config user.email "brandincanfield@gmail.com"
+          git checkout -b lighthouse
+          git add lighthouse_results
+          git commit -m "Add lighthouse report"
+          git push origin lighthouse -f

@@ -1,0 +1,30 @@
+name: Release
+
+on:
+  deployment_status:
+    branches:
+      - main
+
+jobs:
+  release:
+    name: Release
+    if: github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-latest
+
+    permissions:
+      packages: write
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.6
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: npx semantic-release --branches main
