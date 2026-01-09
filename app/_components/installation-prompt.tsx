@@ -6,17 +6,6 @@ import {
 import { useEffect, useRef } from "react";
 import { InstructionsIcon } from "../_icons/other-icons";
 
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      "pwa-install": React.DetailedHTMLProps<
-        React.HTMLAttributes<PWAInstallElement>,
-        PWAInstallElement
-      >;
-    }
-  }
-}
-
 const InstallationPrompt = (props: PWAInstallAttributes) => {
   const pwaInstallRef = useRef<PWAInstallElement>(null);
 
