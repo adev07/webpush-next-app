@@ -2,6 +2,11 @@ import { useEffect, useState } from "react";
 import useLocalStorage from "./useLocalStorage";
 import useUserAgent from "./useUserAgent";
 
+// Backend API URL for push subscription
+const BACKEND_API_URL = "https://yuki-memberless-marilynn.ngrok-free.dev";
+// Hardcoded member ID for now (you can make this dynamic later)
+const MEMBER_ID = "674d59075693a4fcae81b864";
+
 const useServiceWorker = ({ vapidPublicKey }: { vapidPublicKey?: string }) => {
   const { isMobile, isStandalone } = useUserAgent();
   const [notificationsSupported, setNotificationsSupported] = useState(false);
@@ -23,6 +28,45 @@ const useServiceWorker = ({ vapidPublicKey }: { vapidPublicKey?: string }) => {
     );
   }, []);
 
+  // Send subscription to backend API
+  const sendSubscriptionToBackend = async (subscription: PushSubscription) => {
+    try {
+      const subscriptionJSON = subscription.toJSON();
+      
+      const payload = {
+        memberId: MEMBER_ID,
+        subscription: {
+          endpoint: subscriptionJSON.endpoint,
+          keys: {
+            p256dh: subscriptionJSON.keys?.p256dh,
+            auth: subscriptionJSON.keys?.auth,
+          },
+        },
+      };
+
+      console.log("Sending subscription to backend:", payload);
+
+      const response = await fetch(`${BACKEND_API_URL}/push-subscription/subscribe`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Backend responded with status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log("Backend subscription response:", result);
+      return result;
+    } catch (error) {
+      console.error("Error sending subscription to backend:", error);
+      throw error;
+    }
+  };
+
   // This will retrieve a new subscription from the PushManager that we can tie to a user
   const subscribeToPushManager = async (reg: ServiceWorkerRegistration) => {
     try {
@@ -32,7 +76,9 @@ const useServiceWorker = ({ vapidPublicKey }: { vapidPublicKey?: string }) => {
       };
       return await reg.pushManager.subscribe(options).then(
         async (sub: PushSubscription) => {
-          // Save to your database here
+          // Send subscription to backend API
+          await sendSubscriptionToBackend(sub);
+          // Also save locally for reference
           setUserSubscription(JSON.stringify(sub));
           setNotificationsEnabled(true);
         },
