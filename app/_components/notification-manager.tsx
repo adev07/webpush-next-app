@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import sendPushNotification from "../_actions/send-push-notification";
 import useServiceWorker from "../_hooks/usePushNotifications";
 
 import { NotificationIcon, Off, On } from "../_icons/other-icons";
 import InstallationPrompt from "./installation-prompt";
 import { siteConfig } from "@/lib/site-config";
+
+// Backend API URL for push notifications
+const BACKEND_API_URL = "https://yuki-memberless-marilynn.ngrok-free.dev";
+const MEMBER_ID = "674d59075693a4fcae81b864";
 
 export const NotificationManager = ({
   vapidPublicKey,
@@ -110,12 +113,42 @@ export const NotificationManager = ({
             alert("Please enable notifications.");
           } else {
             setIsLoadingSendNotification(true);
-            await sendPushNotification({
-              title: "Hello There!",
-              body: "This is a push notification.",
-              subscription: JSON.parse(userSubscription),
-            });
-            setIsLoadingSendNotification(false);
+            try {
+              const payload = {
+                memberId: MEMBER_ID,
+                notification: {
+                  title: "Hello There!",
+                  body: "This is a push notification.",
+                  icon: "/logo.png",
+                  badge: "/badge.png",
+                },
+              };
+
+              console.log("Sending notification via backend:", payload);
+
+              const response = await fetch(
+                `${BACKEND_API_URL}/push-subscription/send`,
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify(payload),
+                }
+              );
+
+              if (!response.ok) {
+                throw new Error(`Backend responded with status: ${response.status}`);
+              }
+
+              const result = await response.json();
+              console.log("Notification sent successfully:", result);
+            } catch (error) {
+              console.error("Error sending notification:", error);
+              alert("Failed to send notification. Check console for details.");
+            } finally {
+              setIsLoadingSendNotification(false);
+            }
           }
         }}
       >
