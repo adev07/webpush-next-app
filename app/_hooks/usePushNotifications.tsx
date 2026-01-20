@@ -79,27 +79,66 @@ const useServiceWorker = ({ vapidPublicKey }: { vapidPublicKey?: string }) => {
     }
   };
 
+  // Convert base64 VAPID key to Uint8Array (required for iOS)
+  const urlBase64ToUint8Array = (base64String: string): Uint8Array => {
+    const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding)
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  };
+
   // This will retrieve a new subscription from the PushManager that we can tie to a user
   const subscribeToPushManager = async (reg: ServiceWorkerRegistration) => {
+    console.log("subscribeToPushManager called with registration:", reg);
+    console.log("VAPID public key:", vapidPublicKey);
+    
     try {
-      const options = {
-        applicationServerKey: vapidPublicKey,
+      // Check if already subscribed
+      const existingSubscription = await reg.pushManager.getSubscription();
+      console.log("Existing subscription:", existingSubscription);
+      
+      if (existingSubscription) {
+        console.log("Already subscribed, sending to backend...");
+        await sendSubscriptionToBackend(existingSubscription);
+        setUserSubscription(JSON.stringify(existingSubscription));
+        setNotificationsEnabled(true);
+        return;
+      }
+      
+      // Convert VAPID key for iOS compatibility
+      if (!vapidPublicKey) {
+        throw new Error("VAPID public key is missing");
+      }
+      
+      const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
+      console.log("Converted application server key:", applicationServerKey);
+      
+      const options: PushSubscriptionOptionsInit = {
+        applicationServerKey: applicationServerKey as BufferSource,
         userVisibleOnly: true,
       };
-      return await reg.pushManager.subscribe(options).then(
-        async (sub: PushSubscription) => {
-          // Send subscription to backend API
-          await sendSubscriptionToBackend(sub);
-          // Also save locally for reference
-          setUserSubscription(JSON.stringify(sub));
-          setNotificationsEnabled(true);
-        },
-        (error) => {
-          console.error("Error", error);
-        }
-      );
+      
+      console.log("Subscribing to push manager with options:", options);
+      const subscription = await reg.pushManager.subscribe(options);
+      console.log("Push subscription created:", subscription);
+      
+      // Send subscription to backend API
+      await sendSubscriptionToBackend(subscription);
+      
+      // Save locally for reference
+      setUserSubscription(JSON.stringify(subscription));
+      setNotificationsEnabled(true);
+      
+      console.log("Successfully subscribed to push notifications");
     } catch (err) {
-      console.error("Error", err);
+      console.error("Error in subscribeToPushManager:", err);
+      throw err; // Re-throw to be caught by the caller
     }
   };
 
