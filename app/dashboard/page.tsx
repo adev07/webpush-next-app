@@ -132,7 +132,7 @@ export default function DashboardPage() {
       <main className="flex flex-col items-center pt-12 px-4 max-w-[1024px] mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-white mb-2">
-            Enable Notifications
+            Enable Notification
           </h1>
           <p className="text-zinc-400">
             Subscribe to push notifications to stay updated
