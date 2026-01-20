@@ -107,48 +107,43 @@ const useServiceWorker = ({ vapidPublicKey }: { vapidPublicKey?: string }) => {
   const subscribe = async () => {
     if (!notificationsSupported) {
       alert("Notifications not supported in this browser");
+      return;
     }
+    
     setIsLoadingSubscription(true);
-    // The service worker should already be registered, but this is a safeguard
-    await navigator.serviceWorker
-      .register("/sw.js", { scope: "/" })
-      .then(
-        async function (reg) {
-          await reg.update();
-
-          var serviceWorker;
-          if (reg.installing) {
-            serviceWorker = reg.installing;
-          } else if (reg.waiting) {
-            serviceWorker = reg.waiting;
-          } else if (reg.active) {
-            serviceWorker = reg.active;
-          }
-
-          if (serviceWorker) {
-            // If service worker was already activated, we can simply subscribe to push notifications
-            if (serviceWorker.state == "activated") {
-              console.log("Service worker was already activated");
-              await subscribeToPushManager(reg);
-            }
-            // Otherwise, we will wait for the service worker to activate, request permission, and then subscribe
-            serviceWorker.addEventListener("statechange", async function (e) {
-              const sw = e.target as ServiceWorker;
-              if (sw.state == "activated") {
-                console.log("Service worker newly activated");
-                await window?.Notification.requestPermission();
-                await subscribeToPushManager(reg);
-              }
-            });
-          }
-        },
-        function (err) {
-          console.error("Unsuccessful service worker registration", err);
-        }
-      )
-      .finally(() => {
+    
+    try {
+      // IMPORTANT: On iOS, we MUST request permission FIRST before any push subscription
+      // This must happen in response to a user gesture (button click)
+      console.log("Requesting notification permission...");
+      const permission = await Notification.requestPermission();
+      console.log("Permission result:", permission);
+      
+      if (permission !== "granted") {
+        alert("Notification permission denied. Please enable notifications in your device settings.");
         setIsLoadingSubscription(false);
-      });
+        return;
+      }
+      
+      // Register service worker
+      console.log("Registering service worker...");
+      const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+      await reg.update();
+      console.log("Service worker registered:", reg);
+      
+      // Wait for the service worker to be ready
+      const registration = await navigator.serviceWorker.ready;
+      console.log("Service worker ready:", registration);
+      
+      // Now subscribe to push notifications
+      await subscribeToPushManager(registration);
+      
+    } catch (err) {
+      console.error("Error in subscribe flow:", err);
+      alert("There was an error enabling notifications. Please try again.");
+    } finally {
+      setIsLoadingSubscription(false);
+    }
   };
 
   return {
