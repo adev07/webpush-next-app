@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import useLocalStorage from "./useLocalStorage";
 import useUserAgent from "./useUserAgent";
+import { useAuth } from "../_context/AuthContext";
 
 // Backend API URL for push subscription
 const BACKEND_API_URL = "https://yuki-memberless-marilynn.ngrok-free.dev";
-// Hardcoded member ID for now (you can make this dynamic later)
-const MEMBER_ID = "674d59075693a4fcae81b864";
 
 const useServiceWorker = ({ vapidPublicKey }: { vapidPublicKey?: string }) => {
   const { isMobile, isStandalone } = useUserAgent();
+  const { user, widgets } = useAuth();
   const [notificationsSupported, setNotificationsSupported] = useState(false);
   const [isLoadingSubscription, setIsLoadingSubscription] = useState(false);
 
@@ -33,8 +33,19 @@ const useServiceWorker = ({ vapidPublicKey }: { vapidPublicKey?: string }) => {
     try {
       const subscriptionJSON = subscription.toJSON();
       
+      // Get widget ID from the first widget
+      const widgetId = widgets?.[0]?._id || null;
+      
+      // Determine actorType based on user role
+      // If role is "user" -> actorType is "admin"
+      // If role is "member" -> actorType is "agent"
+      const userRole = user?.user?.role;
+      const actorType = userRole === "member" ? "agent" : "admin";
+      
       const payload = {
-        memberId: MEMBER_ID,
+        actorId: widgetId,
+        actorType: actorType,
+        widgetId: widgetId,
         subscription: {
           endpoint: subscriptionJSON.endpoint,
           keys: {
@@ -50,6 +61,7 @@ const useServiceWorker = ({ vapidPublicKey }: { vapidPublicKey?: string }) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
         },
         body: JSON.stringify(payload),
       });

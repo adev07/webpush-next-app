@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { siteConfig } from "@/lib/site-config";
 import SplashScreens from "@/lib/splash-screens";
+import { AuthProvider } from "./_context/AuthContext";
 
 export const metadata: Metadata = {
   metadataBase: siteConfig.url,
@@ -40,8 +41,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="min-h-screen max-w-[1024px] flex overscroll-none mx-auto bg-gradient-to-b from-zinc-800 to-zinc-900 text-zinc-300">
-        {children}
+      <body className="min-h-screen flex overscroll-none bg-gradient-to-b from-zinc-800 to-zinc-900 text-zinc-300">
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

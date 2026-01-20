@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import useServiceWorker from "../_hooks/usePushNotifications";
+import { useAuth } from "../_context/AuthContext";
 
 import { NotificationIcon, Off, On } from "../_icons/other-icons";
 import InstallationPrompt from "./installation-prompt";
@@ -9,13 +10,13 @@ import { siteConfig } from "@/lib/site-config";
 
 // Backend API URL for push notifications
 const BACKEND_API_URL = "https://yuki-memberless-marilynn.ngrok-free.dev";
-const MEMBER_ID = "674d59075693a4fcae81b864";
 
 export const NotificationManager = ({
   vapidPublicKey,
 }: {
   vapidPublicKey?: string;
 }) => {
+  const { user, widgets } = useAuth();
   const {
     userSubscription,
     notificationsEnabled,
@@ -27,6 +28,11 @@ export const NotificationManager = ({
   } = useServiceWorker({ vapidPublicKey });
   const [isLoadingSendNotification, setIsLoadingSendNotification] =
     useState(false);
+  
+  // Get widget ID and actor type from auth data
+  const widgetId = widgets?.[0]?._id || null;
+  const userRole = user?.user?.role;
+  const actorType = userRole === "member" ? "agent" : "admin";
 
   // Example of clearing the app badge
   // This will clear it whenever they re-open the app
@@ -115,7 +121,9 @@ export const NotificationManager = ({
             setIsLoadingSendNotification(true);
             try {
               const payload = {
-                memberId: MEMBER_ID,
+                actorId: widgetId,
+                actorType: actorType,
+                widgetId: widgetId,
                 notification: {
                   title: "Hello There!",
                   body: "This is a push notification.",
@@ -132,6 +140,7 @@ export const NotificationManager = ({
                   method: "POST",
                   headers: {
                     "Content-Type": "application/json",
+                    "ngrok-skip-browser-warning": "true",
                   },
                   body: JSON.stringify(payload),
                 }
