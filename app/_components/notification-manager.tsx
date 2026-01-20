@@ -73,10 +73,13 @@ export const NotificationManager = ({
           <span className="text-lg text-zinc-100">Notifications</span>
           <div className="flex gap-2 items-center">
             <button
-              className={`text-xs items-center w-full bg-[#f79e5d] text-zinc-800 font-semibold rounded flex gap-1 px-2 py-1.5 ${
-                isLoadingSubscription ? "animate-pulse" : ""
+              className={`text-sm items-center bg-[#f79e5d] text-zinc-800 font-semibold rounded flex gap-2 px-4 py-3 min-h-[44px] min-w-[44px] active:scale-95 transition-transform ${
+                isLoadingSubscription ? "animate-pulse opacity-70" : ""
               }`}
+              disabled={isLoadingSubscription}
               onClick={async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 if (!isStandalone || !notificationsSupported) {
                   alert(
                     "To enable notifications, you must be on the installed app."
@@ -85,6 +88,7 @@ export const NotificationManager = ({
                   try {
                     await subscribe();
                   } catch (err) {
+                    console.error("Subscribe error:", err);
                     alert("There was an error enabling notifications.");
                   }
                 }

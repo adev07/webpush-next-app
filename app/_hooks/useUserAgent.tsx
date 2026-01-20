@@ -47,9 +47,13 @@ export default function useUserAgent() {
       setIsMobile(!!isMobile);
 
       // Check if app is installed (if it's installed we wont show the prompt)
-      if (window.matchMedia("(display-mode: standalone)").matches) {
-        setIsStandalone(true);
-      }
+      // Check both standard way and iOS-specific way
+      const isStandaloneMode = 
+        window.matchMedia("(display-mode: standalone)").matches ||
+        (window.navigator as any).standalone === true ||
+        document.referrer.includes("android-app://");
+      
+      setIsStandalone(isStandaloneMode);
     }
   }, []);
 
