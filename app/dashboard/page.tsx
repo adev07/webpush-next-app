@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { NotificationManager } from "../_components/notification-manager";
+import { DebugOverlay } from "../_components/debug-overlay";
 import { useAuth } from "../_context/AuthContext";
 
 export default function DashboardPage() {
@@ -85,7 +86,10 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-800 to-zinc-900 text-zinc-300">
+    <div className="min-h-screen bg-gradient-to-b from-zinc-800 to-zinc-900 text-zinc-300 pb-64">
+      {/* Debug Overlay - shows console logs on screen */}
+      <DebugOverlay />
+      
       {/* Header */}
       <header className="w-full px-4 py-4 flex items-center justify-between max-w-[1024px] mx-auto">
         <div className="flex items-center gap-3">

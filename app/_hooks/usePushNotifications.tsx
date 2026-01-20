@@ -144,42 +144,53 @@ const useServiceWorker = ({ vapidPublicKey }: { vapidPublicKey?: string }) => {
 
   // This is called when a user clicks a 'Subscribe' button on your site
   const subscribe = async () => {
-    if (!notificationsSupported) {
-      alert("Notifications not supported in this browser");
-      return;
-    }
-    
-    setIsLoadingSubscription(true);
+    let step = "init";
     
     try {
+      step = "checking support";
+      if (!notificationsSupported) {
+        alert("Notifications not supported in this browser");
+        return;
+      }
+      
+      setIsLoadingSubscription(true);
+      
       // IMPORTANT: On iOS, we MUST request permission FIRST before any push subscription
       // This must happen in response to a user gesture (button click)
-      console.log("Requesting notification permission...");
+      step = "requesting permission";
       const permission = await Notification.requestPermission();
-      console.log("Permission result:", permission);
       
       if (permission !== "granted") {
-        alert("Notification permission denied. Please enable notifications in your device settings.");
+        alert(`Notification permission: ${permission}. Please enable notifications in your device settings.`);
         setIsLoadingSubscription(false);
         return;
       }
       
       // Register service worker
-      console.log("Registering service worker...");
+      step = "registering service worker";
       const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
       await reg.update();
-      console.log("Service worker registered:", reg);
       
       // Wait for the service worker to be ready
+      step = "waiting for service worker ready";
       const registration = await navigator.serviceWorker.ready;
-      console.log("Service worker ready:", registration);
+      
+      // Check VAPID key
+      step = "checking VAPID key";
+      if (!vapidPublicKey) {
+        throw new Error("VAPID public key is missing. Check NEXT_PUBLIC_VAPID_PUBLIC_KEY env variable.");
+      }
       
       // Now subscribe to push notifications
+      step = "subscribing to push manager";
       await subscribeToPushManager(registration);
       
-    } catch (err) {
+      alert("Notifications enabled successfully!");
+      
+    } catch (err: any) {
+      const errorMessage = err?.message || err?.toString() || "Unknown error";
       console.error("Error in subscribe flow:", err);
-      alert("There was an error enabling notifications. Please try again.");
+      alert(`Error at step "${step}": ${errorMessage}`);
     } finally {
       setIsLoadingSubscription(false);
     }
