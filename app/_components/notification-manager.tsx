@@ -7,9 +7,7 @@ import { useAuth } from "../_context/AuthContext";
 import { NotificationIcon, Off, On } from "../_icons/other-icons";
 import InstallationPrompt from "./installation-prompt";
 import { siteConfig } from "@/lib/site-config";
-
-// Backend API URL for push notifications
-const BACKEND_API_URL = "https://yuki-memberless-marilynn.ngrok-free.dev";
+import { API_BASE_URL } from "@/lib/api-config";
 
 export const NotificationManager = ({
   vapidPublicKey,
@@ -139,7 +137,7 @@ export const NotificationManager = ({
               console.log("Sending notification via backend:", payload);
 
               const response = await fetch(
-                `${BACKEND_API_URL}/push-subscription/send`,
+                `${API_BASE_URL}/push-subscription/send`,
                 {
                   method: "POST",
                   headers: {

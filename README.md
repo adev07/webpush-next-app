@@ -68,10 +68,15 @@ model User {
 `npx web-push generate-vapid-keys`
 
 ```
+NEXT_PUBLIC_API_BASE_URL=https://api.helioai.tech
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=BIUXugjBUcsYUvck9gKaHGEtSYbkZ5USN-xUnEt3VXnT1Dj98FuBhEMiSUBdR1KatIjwrAuQF04rKXEKBnoIjv8
+
 VAPID_PUBLIC_KEY=BIUXugjBUcsYUvck9gKaHGEtSYbkZ5USN-xUnEt3VXnT1Dj98FuBhEMiSUBdR1KatIjwrAuQF04rKXEKBnoIjv8
 
 VAPID_PRIVATE_KEY=0sXtucpaDfqQtIFDC3WZXZTdbjDSqrcBQ4J1DhTWEPA
 ```
+
+If you change `NEXT_PUBLIC_*` env vars, restart the dev server (and rebuild for production). If the PWA is installed, you may also need to refresh/update the service worker (or clear site data) to flush cached bundles.
 
 ## Caching / Offline Mode
 We are using the default caching setup of [next-pwa](https://github.com/DuCanhGH/next-pwa), which is to basically cache everything. View their [documentation](https://ducanh-next-pwa.vercel.app/) for customization options

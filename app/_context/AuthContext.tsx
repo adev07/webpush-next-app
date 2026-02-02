@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { API_BASE_URL, WIDGETS_API_URL } from "@/lib/api-config";
 
 interface UserData {
   _id: string;
@@ -37,9 +38,6 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const API_BASE_URL = "https://yuki-memberless-marilynn.ngrok-free.dev";
-const WIDGETS_API_URL = "https://yuki-memberless-marilynn.ngrok-free.dev/widgets";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);

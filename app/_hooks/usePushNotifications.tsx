@@ -2,9 +2,7 @@ import { useEffect, useState } from "react";
 import useLocalStorage from "./useLocalStorage";
 import useUserAgent from "./useUserAgent";
 import { useAuth } from "../_context/AuthContext";
-
-// Backend API URL for push subscription
-const BACKEND_API_URL = "https://yuki-memberless-marilynn.ngrok-free.dev";
+import { API_BASE_URL } from "@/lib/api-config";
 
 const useServiceWorker = ({ vapidPublicKey }: { vapidPublicKey?: string }) => {
   const { isMobile, isStandalone } = useUserAgent();
@@ -57,7 +55,7 @@ const useServiceWorker = ({ vapidPublicKey }: { vapidPublicKey?: string }) => {
 
       console.log("Sending subscription to backend:", payload);
 
-      const response = await fetch(`${BACKEND_API_URL}/push-subscription/subscribe`, {
+      const response = await fetch(`${API_BASE_URL}/push-subscription/subscribe`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
